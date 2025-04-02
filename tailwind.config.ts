@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				bookxchange: {
+					primary: '#8B4513',   // Dark brown
+					secondary: '#4682B4', // Steel blue
+					accent: '#FF8C00',    // Dark orange
+					light: '#F5F5DC',     // Beige
+					dark: '#2D3748',      // Dark slate
+					muted: '#B0C4DE',     // Light steel blue
+					paper: '#FFF8E1'      // Light cream
 				}
 			},
 			borderRadius: {
@@ -84,11 +94,20 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'page-turn': {
+					'0%': { transform: 'rotateY(0deg)' },
+					'100%': { transform: 'rotateY(-15deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'page-turn': 'page-turn 1.5s ease-in-out infinite alternate'
+			},
+			fontFamily: {
+				serif: ['Merriweather', 'Georgia', 'serif'],
+				sans: ['Inter', 'system-ui', 'sans-serif']
 			}
 		}
 	},

@@ -1,65 +1,59 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Upload, X, Plus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { UploadCloud, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
-const GENRES = [
-  'Fiction', 'Non-Fiction', 'Science Fiction', 'Mystery', 
-  'Romance', 'Biography', 'History', 'Poetry', 'Self-Help',
-  'Fantasy', 'Horror', 'Thriller', 'Children', 'Young Adult',
-  'Classics', 'Science', 'Technology', 'Business', 'Travel'
-];
-
-const CONDITIONS = [
-  'Like New', 'Very Good', 'Good', 'Fair', 'Acceptable'
-];
-
-const LANGUAGES = [
-  'English', 'Hindi', 'Bengali', 'Marathi', 'Tamil',
-  'Telugu', 'Kannada', 'Malayalam', 'Gujarati', 'Urdu',
-  'Punjabi', 'Odia', 'French', 'German', 'Spanish'
-];
-
-const Upload = () => {
-  const navigate = useNavigate();
+const UploadPage = () => {
   const { toast } = useToast();
+  const [bookTitle, setBookTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [description, setDescription] = useState('');
+  const [genre, setGenre] = useState('');
+  const [condition, setCondition] = useState('');
+  const [language, setLanguage] = useState('');
+  const [price, setPrice] = useState('');
+  const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    author: '',
-    description: '',
-    genre: '',
-    language: '',
-    price: '',
-    condition: '',
-    name: '',
-    phone: '',
-    email: '',
-    upi: ''
-  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  // Simulated XGBoost pricing recommendation
+  const getXGBoostPriceSuggestion = (bookDetails: {
+    condition: string;
+    genre: string;
+    publishYear?: number;
+  }) => {
+    // This is a simplified version of what would be a real ML model
+    const basePrice = {
+      'Like New': 300,
+      'Very Good': 250,
+      'Good': 200,
+      'Fair': 150,
+      'Acceptable': 100,
+    }[bookDetails.condition] || 200;
+    
+    const genreMultiplier = {
+      'Fiction': 1.0,
+      'Non-Fiction': 1.2,
+      'Science Fiction': 1.1,
+      'Mystery': 1.05,
+      'Romance': 0.95,
+      'Biography': 1.1,
+      'History': 1.15,
+      'Poetry': 0.9,
+      'Self-Help': 1.1,
+    }[bookDetails.genre] || 1.0;
+    
+    // Add some randomness to simulate demand-based pricing
+    const demandFactor = 0.85 + (Math.random() * 0.3);
+    
+    return Math.round(basePrice * genreMultiplier * demandFactor);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,20 +67,35 @@ const Upload = () => {
     }
   };
 
+  const calculateSuggestedPrice = () => {
+    if (condition && genre) {
+      const suggestedPrice = getXGBoostPriceSuggestion({
+        condition,
+        genre
+      });
+      setSuggestedPrice(suggestedPrice);
+      toast({
+        title: "AI Price Suggestion",
+        description: `Based on book condition, genre, and current market demand, we suggest ₹${suggestedPrice} as a competitive price.`,
+        duration: 5000,
+      });
+    } else {
+      toast({
+        title: "Cannot calculate price",
+        description: "Please select both condition and genre to get a price suggestion.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Success!",
-        description: "Your book has been uploaded successfully.",
-        variant: "default",
-      });
-      navigate('/');
-    }, 1500);
+    toast({
+      title: "Book Listed Successfully",
+      description: "Your book has been listed on BookXchange. You will be notified when someone is interested.",
+      duration: 5000,
+    });
   };
 
   return (
@@ -94,263 +103,242 @@ const Upload = () => {
       <Navbar />
       
       <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <div className="flex items-center justify-center mb-6">
-            <div className="rounded-full bg-bookxchange-primary/10 w-16 h-16 flex items-center justify-center mr-4">
-              <Upload className="h-8 w-8 text-bookxchange-primary" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-serif font-bold text-bookxchange-dark">
-              Upload Your Book
-            </h1>
+        <h1 className="text-3xl font-serif font-bold text-bookxchange-dark mb-8">
+          Upload Your Book
+        </h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <Card className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-xl font-serif font-semibold">Book Details</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="bookTitle" className="text-sm font-medium">Book Title</label>
+                      <Input 
+                        id="bookTitle" 
+                        placeholder="Enter book title" 
+                        required 
+                        value={bookTitle}
+                        onChange={(e) => setBookTitle(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="author" className="text-sm font-medium">Author</label>
+                      <Input 
+                        id="author" 
+                        placeholder="Enter author name" 
+                        required 
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="description" className="text-sm font-medium">Description</label>
+                    <Textarea 
+                      id="description" 
+                      placeholder="Enter book description and condition details" 
+                      required 
+                      className="min-h-[100px]"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="genre" className="text-sm font-medium">Genre</label>
+                      <Select value={genre} onValueChange={setGenre}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Genre" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Fiction">Fiction</SelectItem>
+                          <SelectItem value="Non-Fiction">Non-Fiction</SelectItem>
+                          <SelectItem value="Science Fiction">Science Fiction</SelectItem>
+                          <SelectItem value="Mystery">Mystery</SelectItem>
+                          <SelectItem value="Romance">Romance</SelectItem>
+                          <SelectItem value="Biography">Biography</SelectItem>
+                          <SelectItem value="History">History</SelectItem>
+                          <SelectItem value="Poetry">Poetry</SelectItem>
+                          <SelectItem value="Self-Help">Self-Help</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="condition" className="text-sm font-medium">Condition</label>
+                      <Select value={condition} onValueChange={setCondition}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Condition" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Like New">Like New</SelectItem>
+                          <SelectItem value="Very Good">Very Good</SelectItem>
+                          <SelectItem value="Good">Good</SelectItem>
+                          <SelectItem value="Fair">Fair</SelectItem>
+                          <SelectItem value="Acceptable">Acceptable</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="language" className="text-sm font-medium">Language</label>
+                      <Input 
+                        id="language" 
+                        placeholder="e.g., English, Hindi" 
+                        required 
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="price" className="text-sm font-medium">Your Price (₹)</label>
+                      <div className="flex space-x-2">
+                        <Input 
+                          id="price" 
+                          type="number" 
+                          placeholder="Enter your price" 
+                          required 
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={calculateSuggestedPrice}
+                        >
+                          Get AI Price Suggestion
+                        </Button>
+                      </div>
+                      {suggestedPrice && (
+                        <div className="text-sm text-bookxchange-primary font-medium">
+                          Suggested competitive price: ₹{suggestedPrice}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-xl font-serif font-semibold">Upload Book Image</h2>
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-bookxchange-primary/30 rounded-lg p-6 bg-bookxchange-light/30">
+                    {imagePreview ? (
+                      <div className="mb-4">
+                        <img 
+                          src={imagePreview} 
+                          alt="Book cover preview" 
+                          className="max-h-48 object-contain" 
+                        />
+                      </div>
+                    ) : (
+                      <UploadCloud className="h-12 w-12 text-bookxchange-primary/50 mb-2" />
+                    )}
+                    
+                    <p className="text-sm text-center text-bookxchange-dark/70 mb-4">
+                      {imagePreview 
+                        ? "Click below to change the image"
+                        : "Upload a high-quality image of your book cover"
+                      }
+                    </p>
+                    
+                    <Input
+                      id="bookImage"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('bookImage')?.click()}
+                    >
+                      {imagePreview ? "Change Image" : "Upload Image"}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <div className="flex flex-col sm:flex-row justify-end gap-4">
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={() => window.history.back()}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      className="bg-bookxchange-primary hover:bg-bookxchange-primary/90"
+                    >
+                      List Book
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </Card>
           </div>
           
-          <p className="text-center text-bookxchange-dark/70 mb-8">
-            Fill in the details below to list your book for trade or sale on BookXchange.
-          </p>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4 md:col-span-2">
-                <h2 className="text-xl font-serif font-bold text-bookxchange-dark">
-                  Book Details
-                </h2>
-                <div className="border-t border-bookxchange-primary/10 pt-4"></div>
-              </div>
+          <div>
+            <Card className="p-6 sticky top-6">
+              <h2 className="text-xl font-serif font-semibold mb-4">AI-Powered Features</h2>
               
-              <div className="space-y-2">
-                <Label htmlFor="title">Book Title *</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  placeholder="Enter the full title of the book"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="author">Author Name *</Label>
-                <Input
-                  id="author"
-                  name="author"
-                  placeholder="Enter the author's name"
-                  value={formData.author}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="description">Description & Condition Details *</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Describe the book and its condition (marks, highlights, missing pages, etc.)"
-                  rows={4}
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="genre">Genre *</Label>
-                <Select
-                  onValueChange={(value) => handleSelectChange('genre', value)}
-                  required
-                >
-                  <SelectTrigger id="genre">
-                    <SelectValue placeholder="Select a genre" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GENRES.map(genre => (
-                      <SelectItem key={genre} value={genre}>
-                        {genre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="language">Language *</Label>
-                <Select
-                  onValueChange={(value) => handleSelectChange('language', value)}
-                  required
-                >
-                  <SelectTrigger id="language">
-                    <SelectValue placeholder="Select a language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map(language => (
-                      <SelectItem key={language} value={language}>
-                        {language}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="condition">Condition *</Label>
-                <Select
-                  onValueChange={(value) => handleSelectChange('condition', value)}
-                  required
-                >
-                  <SelectTrigger id="condition">
-                    <SelectValue placeholder="Select condition" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONDITIONS.map(condition => (
-                      <SelectItem key={condition} value={condition}>
-                        {condition}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="price">Price (₹) *</Label>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  min="1"
-                  placeholder="Enter the price in rupees"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                <Label>Book Cover Image *</Label>
-                <div className="border-2 border-dashed border-bookxchange-primary/20 rounded-lg p-4 text-center">
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview}
-                        alt="Book cover preview"
-                        className="mx-auto h-64 object-contain"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setImagePreview(null)}
-                        className="absolute top-2 right-2 bg-bookxchange-primary/80 text-white p-1 rounded-full"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="py-8">
-                      <div className="flex justify-center mb-4">
-                        <div className="rounded-full bg-bookxchange-primary/10 w-12 h-12 flex items-center justify-center">
-                          <Plus className="h-6 w-6 text-bookxchange-primary" />
-                        </div>
-                      </div>
-                      <p className="text-bookxchange-dark/70 mb-2">
-                        Drag and drop your image here, or click to browse
-                      </p>
-                      <p className="text-xs text-bookxchange-dark/50">
-                        PNG, JPG or JPEG (max. 5MB)
-                      </p>
-                      <Input
-                        id="image"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                        required={!imagePreview}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="mt-4"
-                        onClick={() => document.getElementById('image')?.click()}
-                      >
-                        Select Image
-                      </Button>
-                    </div>
-                  )}
+              <div className="space-y-4">
+                <div className="bg-bookxchange-light/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <Badge className="mr-2 bg-bookxchange-primary">AI</Badge>
+                    XGBoost Dynamic Pricing
+                  </h3>
+                  <p className="text-sm text-bookxchange-dark/70">
+                    Our AI analyzes book condition, genre, and market demand to suggest optimal pricing for faster trades.
+                  </p>
+                </div>
+                
+                <div className="bg-bookxchange-light/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <Badge className="mr-2 bg-bookxchange-secondary">AI</Badge>
+                    Hybrid Recommendations
+                  </h3>
+                  <p className="text-sm text-bookxchange-dark/70">
+                    BERT content analysis combined with collaborative filtering connects your books with interested readers.
+                  </p>
+                </div>
+                
+                <div className="bg-bookxchange-light/50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <Badge className="mr-2 bg-bookxchange-accent">AI</Badge>
+                    Isolation Forest Security
+                  </h3>
+                  <p className="text-sm text-bookxchange-dark/70">
+                    Advanced fraud detection identifies suspicious transactions, ensuring a safe trading environment.
+                  </p>
                 </div>
               </div>
               
-              <div className="space-y-4 md:col-span-2">
-                <h2 className="text-xl font-serif font-bold text-bookxchange-dark">
-                  Contact Details
-                </h2>
-                <div className="border-t border-bookxchange-primary/10 pt-4"></div>
+              <div className="mt-6 p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-2" />
+                  <div>
+                    <h4 className="font-semibold text-yellow-800">Tips for a Successful Listing</h4>
+                    <ul className="text-sm text-yellow-700 mt-2 list-disc list-inside space-y-1">
+                      <li>Use clear, high-quality images of your book</li>
+                      <li>Describe the condition honestly and in detail</li>
+                      <li>Mention any highlights, notes, or damage</li>
+                      <li>Consider the AI price suggestion for faster trades</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="name">Your Name *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone">Mobile Number *</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="Enter your mobile number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="upi">UPI ID (for payments)</Label>
-                <Input
-                  id="upi"
-                  name="upi"
-                  placeholder="Enter your UPI ID"
-                  value={formData.upi}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="md:col-span-2 flex justify-end space-x-4 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/')}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-bookxchange-primary hover:bg-bookxchange-primary/90"
-                  disabled={loading}
-                >
-                  {loading ? 'Uploading...' : 'Upload Book'}
-                </Button>
-              </div>
-            </div>
-          </form>
+            </Card>
+          </div>
         </div>
       </main>
       
@@ -359,4 +347,4 @@ const Upload = () => {
   );
 };
 
-export default Upload;
+export default UploadPage;

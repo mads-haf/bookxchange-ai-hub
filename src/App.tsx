@@ -12,6 +12,8 @@ import Login from "./pages/Login";
 import Browse from "./pages/Browse";
 import BookDetailsPage from "./pages/BookDetails";
 import RecommendationPage from "./pages/Recommendations";
+import MessagingPage from "./pages/Messaging";
+import AIChatbot from "./components/AIChatbot";
 
 const queryClient = new QueryClient();
 
@@ -30,9 +32,11 @@ const App = () => (
             <Route path="/browse" element={<Browse />} />
             <Route path="/book/:id" element={<BookDetailsPage />} />
             <Route path="/recommendations" element={<RecommendationPage />} />
+            <Route path="/messages" element={<MessagingPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <AIChatbot />
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>

@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { UploadCloud, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { getXGBoostPriceSuggestion } from '@/utils/ai/pricingEngine';
 
 const UploadPage = () => {
   const { toast } = useToast();
@@ -20,41 +21,9 @@ const UploadPage = () => {
   const [condition, setCondition] = useState('');
   const [language, setLanguage] = useState('');
   const [price, setPrice] = useState('');
+  const [publishYear, setPublishYear] = useState<string>('');
   const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  // Simulated XGBoost pricing recommendation
-  const getXGBoostPriceSuggestion = (bookDetails: {
-    condition: string;
-    genre: string;
-    publishYear?: number;
-  }) => {
-    // This is a simplified version of what would be a real ML model
-    const basePrice = {
-      'Like New': 300,
-      'Very Good': 250,
-      'Good': 200,
-      'Fair': 150,
-      'Acceptable': 100,
-    }[bookDetails.condition] || 200;
-    
-    const genreMultiplier = {
-      'Fiction': 1.0,
-      'Non-Fiction': 1.2,
-      'Science Fiction': 1.1,
-      'Mystery': 1.05,
-      'Romance': 0.95,
-      'Biography': 1.1,
-      'History': 1.15,
-      'Poetry': 0.9,
-      'Self-Help': 1.1,
-    }[bookDetails.genre] || 1.0;
-    
-    // Add some randomness to simulate demand-based pricing
-    const demandFactor = 0.85 + (Math.random() * 0.3);
-    
-    return Math.round(basePrice * genreMultiplier * demandFactor);
-  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,10 +38,16 @@ const UploadPage = () => {
 
   const calculateSuggestedPrice = () => {
     if (condition && genre) {
+      // Use the AI pricing engine to get a price suggestion
       const suggestedPrice = getXGBoostPriceSuggestion({
         condition,
-        genre
+        genre,
+        publishYear: publishYear ? parseInt(publishYear) : undefined,
+        isPopular: Math.random() > 0.5, // Simulated popularity factor
+        supplyCount: Math.floor(Math.random() * 50), // Simulated supply count
+        demandScore: Math.floor(Math.random() * 70 + 30) // Simulated demand score
       });
+      
       setSuggestedPrice(suggestedPrice);
       toast({
         title: "AI Price Suggestion",
@@ -199,6 +174,17 @@ const UploadPage = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="publishYear" className="text-sm font-medium">Publication Year</label>
+                      <Input 
+                        id="publishYear" 
+                        type="number" 
+                        placeholder="e.g., 2010" 
+                        value={publishYear}
+                        onChange={(e) => setPublishYear(e.target.value)}
+                      />
+                    </div>
+                    
                     <div className="space-y-2">
                       <label htmlFor="price" className="text-sm font-medium">Your Price (₹)</label>
                       <div className="flex space-x-2">

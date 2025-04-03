@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getSimilarBooksRecommendations, getMockUserPreferences } from '@/utils/ai/recommendationEngine';
 
 type BookSuggestionsProps = {
   bookId: string;
@@ -37,19 +38,46 @@ const RELATED_BOOKS = [
     price: 320,
     condition: 'Like New',
     genre: 'Fiction'
+  },
+  {
+    id: '5',
+    title: 'Thinking, Fast and Slow',
+    author: 'Daniel Kahneman',
+    coverImage: 'https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    price: 310,
+    condition: 'Good',
+    genre: 'Non-Fiction'
+  },
+  {
+    id: '6',
+    title: 'Dune',
+    author: 'Frank Herbert',
+    coverImage: 'https://images.unsplash.com/photo-1518744928471-f130df1f5100?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    price: 270,
+    condition: 'Good',
+    genre: 'Science Fiction'
+  },
+  {
+    id: '9',
+    title: 'The Alchemist',
+    author: 'Paulo Coelho',
+    coverImage: 'https://images.unsplash.com/photo-1490633874781-1c63cc424610?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    price: 240,
+    condition: 'Like New',
+    genre: 'Fiction'
   }
 ];
 
 const BookSuggestions = ({ bookId, genre }: BookSuggestionsProps) => {
-  // Simulated hybrid recommendation system (SVD + BERT)
-  // In a real app, this would be an API call to a machine learning model
-  const getRecommendedBooks = (currentBookId: string, bookGenre: string) => {
-    // Filter out the current book and prioritize same genre (content-based part - BERT)
-    // Then add some different genres (collaborative filtering part - SVD)
-    return RELATED_BOOKS.filter(book => book.id !== currentBookId);
-  };
-  
-  const recommendedBooks = getRecommendedBooks(bookId, genre);
+  // Use the AI recommendation engine for book suggestions
+  const mockUserPreferences = getMockUserPreferences();
+  const recommendedBooks = getSimilarBooksRecommendations(
+    RELATED_BOOKS,
+    bookId,
+    genre,
+    mockUserPreferences,
+    3
+  );
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -33,7 +33,7 @@ const BookSuggestions = ({ bookId, genre }: BookSuggestionsProps) => {
         const bookDetails = await getBookById(bookId);
         
         if (bookDetails) {
-          const mockUserPreferences = getMockUserPreferences();
+          const userPreferences = getMockUserPreferences();
           
           const RELATED_BOOKS = [
             {
@@ -96,13 +96,13 @@ const BookSuggestions = ({ bookId, genre }: BookSuggestionsProps) => {
             RELATED_BOOKS,
             bookId,
             genre || (bookDetails.genre as string),
-            mockUserPreferences,
+            userPreferences,
             3
           );
           
           setRecommendedBooks(recommendations);
         } else {
-          const mockUserPreferences = getMockUserPreferences();
+          const userPreferences = getMockUserPreferences();
           
           const RELATED_BOOKS = [
             {
@@ -165,7 +165,7 @@ const BookSuggestions = ({ bookId, genre }: BookSuggestionsProps) => {
             RELATED_BOOKS,
             bookId,
             genre,
-            mockUserPreferences,
+            userPreferences,
             3
           );
           
@@ -236,11 +236,13 @@ const BookSuggestions = ({ bookId, genre }: BookSuggestionsProps) => {
           }
         ];
         
+        const userPreferences = getMockUserPreferences();
+        
         const recommendations = getSimilarBooksRecommendations(
           RELATED_BOOKS,
           bookId,
           genre,
-          mockUserPreferences,
+          userPreferences,
           3
         );
         

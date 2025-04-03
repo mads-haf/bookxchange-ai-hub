@@ -12,7 +12,7 @@ import { UploadCloud, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { addBook } from '@/utils/firebase/bookService';
-import { getAIPriceSuggestion } from '@/utils/firebase/aiService';
+import { getAIPriceSuggestion } from '@/utils/firebase/priceSuggestionService';
 
 const UploadPage = () => {
   const { toast } = useToast();

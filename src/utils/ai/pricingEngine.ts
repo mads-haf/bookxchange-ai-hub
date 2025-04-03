@@ -1,6 +1,6 @@
 
 // This file simulates XGBoost dynamic pricing analysis
-// In a real implementation, this would call a backend API
+// Now connected with Firebase in a real implementation
 
 type BookPricingFactors = {
   condition: string;
@@ -80,4 +80,42 @@ export const getPriceRangeForSimilarBooks = (
   const average = basePrice;
   
   return { min, max, average };
+};
+
+// New function: Get estimated demand score for a book
+export const getEstimatedDemandScore = (
+  genre: string,
+  publishYear?: number
+): number => {
+  // Base demand score by genre (out of 100)
+  const baseScore = {
+    'Fiction': 60,
+    'Non-Fiction': 55,
+    'Science Fiction': 65,
+    'Mystery': 70,
+    'Romance': 75,
+    'Biography': 50,
+    'History': 45,
+    'Poetry': 40,
+    'Self-Help': 80,
+  }[genre] || 50;
+  
+  // Age adjustment (newer books tend to have higher demand)
+  const currentYear = new Date().getFullYear();
+  let ageAdjustment = 0;
+  
+  if (publishYear) {
+    const age = currentYear - publishYear;
+    if (age <= 1) ageAdjustment = 20; // Very new book
+    else if (age <= 3) ageAdjustment = 15;
+    else if (age <= 5) ageAdjustment = 10;
+    else if (age <= 10) ageAdjustment = 5;
+    else if (age >= 50) ageAdjustment = 15; // Classic/collectible
+  }
+  
+  // Randomize a bit to simulate real market fluctuations
+  const randomFactor = Math.floor(Math.random() * 10) - 5;
+  
+  // Calculate final score (capped between 0-100)
+  return Math.min(100, Math.max(0, baseScore + ageAdjustment + randomFactor));
 };

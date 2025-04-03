@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,15 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { UploadCloud, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { getXGBoostPriceSuggestion } from '@/utils/ai/pricingEngine';
+import { useAuth } from '@/context/AuthContext';
+import { addBook } from '@/utils/firebase/bookService';
+import { getAIPriceSuggestion } from '@/utils/firebase/aiService';
 
 const UploadPage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { currentUser, isAuthenticated } = useAuth();
+  
   const [bookTitle, setBookTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [description, setDescription] = useState('');
@@ -24,10 +29,24 @@ const UploadPage = () => {
   const [publishYear, setPublishYear] = useState<string>('');
   const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated && !currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to upload books",
+        variant: "destructive",
+      });
+      navigate('/login');
+    }
+  }, [isAuthenticated, currentUser, navigate, toast]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -36,41 +55,83 @@ const UploadPage = () => {
     }
   };
 
-  const calculateSuggestedPrice = () => {
+  const calculateSuggestedPrice = async () => {
     if (condition && genre) {
-      // Use the AI pricing engine to get a price suggestion
-      const suggestedPrice = getXGBoostPriceSuggestion({
-        condition,
-        genre,
-        publishYear: publishYear ? parseInt(publishYear) : undefined,
-        isPopular: Math.random() > 0.5, // Simulated popularity factor
-        supplyCount: Math.floor(Math.random() * 50), // Simulated supply count
-        demandScore: Math.floor(Math.random() * 70 + 30) // Simulated demand score
-      });
-      
-      setSuggestedPrice(suggestedPrice);
-      toast({
-        title: "AI Price Suggestion",
-        description: `Based on book condition, genre, and current market demand, we suggest ₹${suggestedPrice} as a competitive price.`,
-        duration: 5000,
-      });
+      setLoading(true);
+      try {
+        const suggestedPrice = await getAIPriceSuggestion(
+          condition,
+          genre,
+          publishYear ? parseInt(publishYear) : undefined
+        );
+        
+        setSuggestedPrice(suggestedPrice);
+        toast({
+          title: "AI Price Suggestion",
+          description: `Based on book condition, genre, and current market demand, we suggest ₹${suggestedPrice} as a competitive price.`,
+          duration: 5000,
+        });
+      } catch (error) {
+        toast({
+          title: "Error calculating price",
+          description: "There was an error getting the price suggestion. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     } else {
       toast({
         title: "Cannot calculate price",
         description: "Please select both condition and genre to get a price suggestion.",
         variant: "destructive",
-        duration: 5000,
       });
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Book Listed Successfully",
-      description: "Your book has been listed on BookXchange. You will be notified when someone is interested.",
-      duration: 5000,
-    });
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to upload books",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const bookData = {
+        title: bookTitle,
+        author,
+        description,
+        genre,
+        condition,
+        language,
+        publishYear: publishYear ? parseInt(publishYear) : undefined,
+        price: price ? parseInt(price) : 0
+      };
+      
+      const bookId = await addBook(bookData, imageFile || undefined);
+      
+      toast({
+        title: "Book Listed Successfully",
+        description: "Your book has been listed on BookXchange. You will be notified when someone is interested.",
+        duration: 5000,
+      });
+      
+      navigate(`/book/${bookId}`);
+    } catch (error: any) {
+      toast({
+        title: "Error Listing Book",
+        description: error.message || "There was an error listing your book. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
